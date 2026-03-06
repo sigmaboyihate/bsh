@@ -65,7 +65,8 @@ install)
     # yayy!!!
     build 
     
-    # if there is a check() function in package build it does it 
+    # if there is a check() function in package build it does it
+    echo "debug message or something? we doing checks. (if they exist!)" 
     if declare -f check > /dev/null; then
       check
     fi

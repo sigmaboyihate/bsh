@@ -4,3 +4,7 @@ wget. thats it. preferably make-ca, but you can just edit the package manager to
 (assuming you have internet)
 
 for testing reasons, hello depends on cmatrix (just to see if dep resolution works)
+
+## goals
+- testing suite (tests for safety, but build already builds)
+- better cli, more error handling 

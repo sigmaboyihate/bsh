@@ -33,5 +33,6 @@ install() {
 }
 
 remove() {
-    echo "i wouldn't!" 
+    echo "i wouldn't!"
+    echo "but if you switching to busybox or sum, i'd recommend manual removal!" 
 }

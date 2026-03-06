@@ -1,0 +1,33 @@
+name="vim"
+version=9.2.0078
+source="https://github.com/vim/vim/archive/v9.2.0078/vim-9.2.0078.tar.gz"
+confirm=true
+
+
+build() {
+    echo '#define SYS_VIMRC_FILE  "/etc/vimrc"' >>  src/feature.h 
+
+    ./configure --prefix=/usr 
+    make
+}
+
+install() {
+    make install
+    ln -sv vim /usr/bin/vi
+    for L in  /usr/share/man/{,*/}man1/vim.1; do
+        ln -sv vim.1 $(dirname $L)/vi.1
+    done
+}
+
+remove() {
+    rm -f /usr/bin/vim
+    rm -f /usr/bin/vi
+    rm -f /usr/bin/xxd
+    rm -f /usr/bin/vimtutor
+
+    for L in /usr/share/man/{,*/}man1/vim.1; do
+        rm -f $(dirname "$L")/vi.1
+    done
+
+    rm -rf /usr/share/vim
+}

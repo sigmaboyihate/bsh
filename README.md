@@ -8,3 +8,6 @@ for testing reasons, hello depends on cmatrix (just to see if dep resolution wor
 ## goals
 - testing suite (tests for safety, but build already builds)
 - better cli, more error handling 
+
+i am aware this is slightly unoriginal, however im bored.
+ill probably redo stuff in c++ when i complete this, and make it better (in the sense of cleaner code, less random shit, and more original) 

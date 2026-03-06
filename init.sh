@@ -8,4 +8,5 @@ mkdir -p /usr/src/pkgbuilds
 touch /var/lib/pkg/world
 touch /etc/pkg/pkg.conf
 touch /var/lib/pkg/files
-echo "pkg initialized"
+# and also the files now! 
+cp -r pkgbuilds /usr/src/pkgbuilds

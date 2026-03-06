@@ -8,5 +8,7 @@ mkdir -p /usr/src/pkgbuilds
 touch /var/lib/pkg/world
 touch /etc/pkg/pkg.conf
 touch /var/lib/pkg/files
-# and also the files now! 
+# and also the files now!
 cp -r pkgbuilds /usr/src/pkgbuilds
+cp pkg.sh /usr/bin/pkg 
+ln -svf /usr/bin/pkg /usr/bin/bsh

@@ -143,14 +143,9 @@ list)
     cat "$WORLD"
     ;;
 
-version)
-    echo "bsh - version 1.0.0, yippe!"
-    ;;
-
 *)
-    echo "usage: pkg {install|remove|build|list|version} <package>"
+    echo "usage: pkg {install|remove|build|list} <package>"
     ;;
-
 
 esac
 

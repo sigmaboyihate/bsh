@@ -5,6 +5,8 @@ wget. thats it. preferably make-ca, but you can just edit the package manager to
 
 for testing reasons, hello depends on cmatrix (just to see if dep resolution works)
 
+please edit /etc/pkg/pkg.conf (placeholder name) and add MAKEFLAGS CXXFLAGS, whatever you want
+
 ## goals
 - testing suite (tests for safety, but build already builds)
 - better cli, more error handling 

@@ -1,0 +1,16 @@
+name="iana-etc"
+version=20260202
+source="https://github.com/Mic92/iana-etc/releases/download/20260202/iana-etc-20260202.tar.gz"
+
+build() {
+    echo "iana-etc." 
+}
+
+install() {
+    cp -v services protocols /etc
+}
+
+remove(){
+   echo "no internet if you remove." 
+}
+    

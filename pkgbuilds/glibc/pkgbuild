@@ -36,5 +36,5 @@ install() {
 
 remove() {
     echo "i wouldn't!"
-    echo "but if you switching to busybox or sum, i'd recommend manual removal!" 
+    echo "but if you switching to busybox musl or sum, id recommend manual removal (via musl package)!" 
 }

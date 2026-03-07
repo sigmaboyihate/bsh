@@ -10,6 +10,18 @@ PKGBUILDS=/usr/src/pkgbuilds
 cmd="$1"
 pkg="$2"
 
+patches() {
+    for p in "${patch[@]}"; do
+        file="/tmp/pkgs/$(basename "$p")"
+        if [ -f "$file" ]; then
+            echo "patch exists: $file"
+        else
+            echo "downloading patch: $(basename "$p")"
+            wget -q -O "$file" "$p"
+        fi
+    done
+}
+
 confirmer() {
     local pkg="$1"
     # checks confirm flag!
@@ -46,6 +58,9 @@ install)
     
     # now install! opsec 
     mkdir -p /tmp/pkgs
+    # patch downloader! (for deps, anything really!) 
+    patches
+
     # deps!!! 
     for dep in "${depends[@]}"; do
       if ! grep -q "^$dep " "$WORLD"; then
@@ -53,6 +68,7 @@ install)
           pkg install "$dep" # runs this script, also recurses! so if a dep has dep it auto does it!
       fi
     done
+
 
     # now main pkg
     wget -O /tmp/pkgs/$pkg.tar "$source"
@@ -65,8 +81,7 @@ install)
     # yayy!!!
     build 
     
-    # if there is a check() function in package build it does it
-    echo "debug message or something? we doing checks. (if they exist!)" 
+    # if there is a check() function in package build it does it 
     if declare -f check > /dev/null; then
       check
     fi
@@ -143,15 +158,12 @@ list)
     echo "installed packages:"
     cat "$WORLD"
     ;;
-
-version)
-    echo "bsh - version 1.0.0, yippe!"
+config)
+    echo "MAKEFLAGS: $MAKEFLAGS, NINJAFLAGS: $NINJAFLAGS"
     ;;
-
 *)
-    echo "usage: pkg {install|remove|build|list|version} <package>"
+    echo "usage: pkg {install|remove|build|list} <package>"
     ;;
-
 
 esac
 

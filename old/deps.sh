@@ -10,7 +10,29 @@ PKGBUILDS=/usr/src/pkgbuilds
 cmd="$1"
 pkg="$2"
 
+confirmer() {
+    local pkg="$1"
+    # checks confirm flag!
+    echo
+    echo "build done for: $pkg"
+    echo "please review before install."
+    echo -n "install this package? [y/N]: "
+    # reads 
+    read -r reply
+    # just cases 
+    case "$reply" in
+        y|Y|yes|YES)
+            return 0
+            ;;
+        *)
+            echo "install skipped, FUCCKKK" # usually bad, unless u was just testing
+            return 1
+            ;;
+    esac
+}
+
 case "$cmd" in
+
 
 install)
     # safety first kids!
@@ -42,10 +64,33 @@ install)
     cd /tmp/pkgs/$pkg
     # yayy!!!
     build 
-    install
-    echo "$name $version" >> "$WORLD" # simple world file for pkg track!
-    echo "installed $name $version"
-    # done!!! 
+    
+    # if there is a check() function in package build it does it
+    echo "debug message or something? we doing checks. (if they exist!)" 
+    if declare -f check > /dev/null; then
+      check
+    fi
+
+    # variable for installed 
+    installed=false
+    #confirm logic (only for important packages! (thats why the flag exists))
+    if [ "$confirm" = "true" ]; then
+        if confirmer "$name"; then
+          install
+          installed=true
+        fi
+    else
+      install
+      installed=true
+    fi
+    # install logic
+    if [ "$installed" = "true" ]; then
+      echo "$name $version" >> "$WORLD"
+      echo "installed $name $version"
+    else
+      echo "installation skipped for $name" # not adding to world
+    fi
+    # done!!! wipe files:D 
     rm -rf /tmp/pkgs/$pkg 
     rm /tmp/pkgs/$pkg.tar 
     ;;
@@ -54,23 +99,23 @@ remove)
     [ "$(id -u)" -eq 0 ] || { echo "error: pkg must be run as root"; exit 1; }
     source "$PKGBUILDS/$pkg/pkgbuild"
     remove
-    sed -i "/^$pkg /d" "$WORLD"
+    sed -i "/^$pkg /d" "$WORLD" # removes that pkg from world
     echo "removed $name $version"
     ;;
 
 build)
     echo "building $pkg"
-     # safety first kids!
+    # WORD!!
     [ "$(id -u)" -eq 0 ] || { echo "error: pkg must be run as root"; exit 1; }
     [ -z "$pkg" ] && echo "usage: pkg build <package>" && exit 1
 
-    # i like having this part
+    # i like having this part, makes me fell POWERFUL!!
     cat "$PKGBUILDS/$pkg/pkgbuild"
 
     # gets defs
     source "$PKGBUILDS/$pkg/pkgbuild"
 
-    # now install! opsec
+   
     mkdir -p /tmp/pkgs
     # build does NOT do deps. simple.
 
@@ -78,14 +123,19 @@ build)
     wget -O /tmp/pkgs/$pkg.tar "$source"
 
     mkdir -p /tmp/pkgs/$pkg # makes the pkg dir
-    # --strip-comp reduces risk of compile fucking itself :D
+  
     tar -xf /tmp/pkgs/$pkg.tar -C /tmp/pkgs/$pkg --strip-components=${strip:-1}
     # go into dir
     cd /tmp/pkgs/$pkg
     # yayy!!!
     build
     echo "built $name $version"
-    # done!!!
+    echo "now doing checks (if they exist!)"
+    if declare -f check > /dev/null; then
+      check
+    fi
+    # if not, just end.
+    # done!!! yay
     echo "now simply check /tmp/pkgs for the package, and what you want to do further/and or to install!"
     ;;
 
@@ -94,9 +144,14 @@ list)
     cat "$WORLD"
     ;;
 
-*)
-    echo "usage: pkg {install|remove|build|list} <package>"
+version)
+    echo "bsh - version 1.0.0, yippe!"
     ;;
+
+*)
+    echo "usage: pkg {install|remove|build|list|version} <package>"
+    ;;
+
 
 esac
 

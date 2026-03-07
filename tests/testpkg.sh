@@ -10,28 +10,41 @@ PKGBUILDS=/usr/src/pkgbuilds
 cmd="$1"
 pkg="$2"
 
-case "$cmd" in
+patches() {
+    for p in "${patch[@]}"; do
+        file="/tmp/pkgs/$(basename "$p")"
+        if [ -f "$file" ]; then
+            echo "patch exists: $file"
+        else
+            echo "downloading patch: $(basename "$p")"
+            wget -q -O "$file" "$p"
+        fi
+    done
+}
 
 confirmer() {
     local pkg="$1"
-
+    # checks confirm flag!
     echo
     echo "build done for: $pkg"
     echo "please review before install."
     echo -n "install this package? [y/N]: "
-
+    # reads 
     read -r reply
-
+    # just cases 
     case "$reply" in
         y|Y|yes|YES)
             return 0
             ;;
         *)
-            echo "install skipped, FUCCKKK"
+            echo "install skipped, FUCCKKK" # usually bad, unless u was just testing
             return 1
             ;;
     esac
 }
+
+case "$cmd" in
+
 
 install)
     # safety first kids!
@@ -45,6 +58,9 @@ install)
     
     # now install! opsec 
     mkdir -p /tmp/pkgs
+    # patch downloader! (for deps, anything really!) 
+    patches
+
     # deps!!! 
     for dep in "${depends[@]}"; do
       if ! grep -q "^$dep " "$WORLD"; then
@@ -52,6 +68,7 @@ install)
           pkg install "$dep" # runs this script, also recurses! so if a dep has dep it auto does it!
       fi
     done
+
 
     # now main pkg
     wget -O /tmp/pkgs/$pkg.tar "$source"
@@ -97,7 +114,7 @@ remove)
     [ "$(id -u)" -eq 0 ] || { echo "error: pkg must be run as root"; exit 1; }
     source "$PKGBUILDS/$pkg/pkgbuild"
     remove
-    sed -i "/^$pkg /d" "$WORLD"
+    sed -i "/^$pkg /d" "$WORLD" # removes that pkg from world
     echo "removed $name $version"
     ;;
 
@@ -141,7 +158,9 @@ list)
     echo "installed packages:"
     cat "$WORLD"
     ;;
-
+config)
+    echo "MAKEFLAGS: $MAKEFLAGS, NINJAFLAGS: $NINJAFLAGS"
+    ;;
 *)
     echo "usage: pkg {install|remove|build|list} <package>"
     ;;

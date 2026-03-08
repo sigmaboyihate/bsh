@@ -9,7 +9,8 @@ please edit /etc/pkg/pkg.conf (placeholder name) and add MAKEFLAGS CXXFLAGS, wha
 
 ## goals
 - testing suite (tests for safety, but build already builds)
-- better cli, more error handling 
+- better cli, more error handling
+- integ checks
 
 i am aware this is slightly unoriginal, however im bored.
 ill probably redo stuff in c++ when i complete this, and make it better (in the sense of cleaner code, less random shit, and more original) 

@@ -1,16 +1,18 @@
 #!/bin/bash
-
+# files will still have 'pkg' instead of 'bsh' because i am lazy.
 CONFIG=/etc/pkg/pkg.conf
 WORLD=/var/lib/pkg/world
 FILES=/var/lib/pkg/files
 PKGBUILDS=/usr/src/pkgbuilds
 DESTDIR=/tmp/pkgs/$pkg-dest # destdir, its initialized twice but idc
+DEPTREE=/var/lib/pkg/deptree # for dependencies (requiredby)
 
 [ -f "$CONFIG" ] && source "$CONFIG"
 
 cmd="$1"
 pkg="$2"
 
+#patching, since im on lfs i need fhs patches 
 patches() {
     for p in "${patch[@]}"; do
         file="/tmp/pkgs/$(basename "$p")"
@@ -23,7 +25,8 @@ patches() {
     done
 }
 
-confirmer() {
+# purely there just for you to glance around and see if glibc did all tests right (other pkgs too)
+confirmer() { 
     local pkg="$1"
     # checks confirm flag!
     echo
@@ -38,17 +41,18 @@ confirmer() {
             return 0
             ;;
         *)
-            echo "install skipped, FUCCKKK" # usually bad, unless u was just testing
+            echo "install skipped, FUCCKKK" # usually bad, unless u was just testing, and yes, i swear in official code
             return 1
             ;;
     esac
 }
 
+# installs to destdir first, and lets me track for removal easier (used to remove via pkgbuild files, hella inefficent, fallback still exists) 
 destdirinstall() {
     mkdir -p /tmp/pkgs/$pkg-dest
     DESTDIR=/tmp/pkgs/$pkg-dest install # destdir!!
 
-    # record files
+    # record files to shove them into file tracking for removal thingy
     mkdir -p "$FILES"
     find /tmp/pkgs/$pkg-dest -type f -o -type l | \
         sed "s|/tmp/pkgs/$pkg-dest||" > "$FILES/$pkg"
@@ -56,7 +60,7 @@ destdirinstall() {
     # copy to real system
     cp -r /tmp/pkgs/$pkg-dest/* /
 
-    # cleanup staging
+    # cleanup stage
     rm -rf /tmp/pkgs/$pkg-dest
 }
 
@@ -75,6 +79,13 @@ install)
     # now install! opsec
     mkdir -p /tmp/pkgs
     # patch downloader! (for deps, anything really!)
+    # conflict checker
+    for conflict in "${conflicts[@]}"; do
+        if grep -q "^$conflict " "$WORLD"; then
+            echo "error: $pkg conflicts with $conflict (installed)"
+            exit 1
+        fi
+    done
     patches
 
     # deps!!!
@@ -83,6 +94,7 @@ install)
             echo "installing dependency: $dep"
             bash "$0" install "$dep" # runs this script, also recurses! so if a dep has dep it auto does it!
         fi
+	echo "$dep $pkg" >> "$DEPTREE" # record what depends on what
     done
 
     # now main pkg
@@ -125,22 +137,33 @@ install)
     # done!!! wipe files :D
     rm -rf /tmp/pkgs/$pkg
     rm -f /tmp/pkgs/$pkg.tar
+    rm -f /tmp/pkgs/*.patch 
     ;;
 
 remove)
+    # WARNING!!! IF YOU INSTALLED GLIBC AND SHIT, YES - RUNNING SUDO PKG REMOVE BINUTILS WILL INDEED REMOVE BINUTILS, BE CAREFUL!
     [ "$(id -u)" -eq 0 ] || { echo "error: pkg must be run as root"; exit 1; }
     [ -z "$pkg" ] && echo "usage: pkg remove <package>" && exit 1
     grep -q "^$pkg " "$WORLD" || { echo "$pkg is not installed"; exit 1; }
 
     source "$PKGBUILDS/$pkg/pkgbuild"
 
+    requiredby=$(grep "^$pkg " "$DEPTREE" | awk '{print $2}' | tr '\n' ' ')
+    if [ -n "$requiredby" ]; then
+        echo "error: $pkg is required by: $requiredby"
+        exit 1
+    fi
+
     # remove all tracked files
     while IFS= read -r file; do
         rm -f "$file"
     done < "$FILES/$pkg"
 
-    rm -f "$FILES/$pkg"
+    rm -f "$FILES/$pkg" # removes the package file, just for cleanup
     sed -i "/^$pkg /d" "$WORLD" # removes that pkg from world
+
+    sed -i "/ $pkg$/d" "$DEPTREE"   # remove entries where package is the dependent
+    sed -i "/^$pkg /d" "$DEPTREE"   # remove entries where package is the dependency
     echo "removed $name $version"
     ;;
 
@@ -180,16 +203,37 @@ build)
     ;;
 
 list)
+    # holy simple 
     echo "installed packages:"
     cat "$WORLD"
+    echo "and deptree:"
+    cat "$DEPTREE"
+    ;;
+
+requiredby)
+    # also for debugging, lets me see what package is requiredby what, good for debugging problems
+    [ -z "$pkg" ] && echo "usage: pkg requiredby <package>" && exit 1
+    result=$(grep "^$pkg " "$DEPTREE" | awk '{print $2}')
+    [ -z "$result" ] && echo "$pkg is not required by anything" && exit 0
+    echo "$pkg is required by:"
+    echo "$result"
     ;;
 
 config)
-    echo "MAKEFLAGS: $MAKEFLAGS, NINJAFLAGS: $NINJAFLAGS, DESTDIR: $DESTDIR"
+    # simply shows what you source from config. /etc/pkg/pkg.conf
+    echo "MAKEFLAGS: $MAKEFLAGS, NINJAFLAGS: $NINJAFLAGS"
     ;;
 
+owns)
+    # for debug
+    file="$2"
+    [ -z "$file" ] && echo "usage: pkg owns <file>" && exit 1
+    result=$(grep -rl "^$file$" "$FILES")
+    [ -z "$result" ] && echo "no package owns $file" && exit 1
+    echo "owned by: $(basename $result)"
+    ;;
 *)
-    echo "usage: pkg {install|remove|build|list|config} <package>"
+    echo "usage: pkg {install|remove|build|list|config|requiredby|owns} <package>"
     ;;
 
 esac

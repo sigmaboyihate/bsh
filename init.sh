@@ -7,6 +7,7 @@ mkdir -p /var/log/pkg
 mkdir -p /usr/src/pkgbuilds
 touch /var/lib/pkg/world
 touch /etc/pkg/pkg.conf
+touch /var/lib/pkg/deptree
 mkdir -p /var/lib/pkg/files
 # and also the files now!
 cp -r pkgbuilds /usr/src # fixed dumbass error

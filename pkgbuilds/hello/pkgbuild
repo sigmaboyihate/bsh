@@ -2,6 +2,7 @@ name="hello"
 version=2.12
 source="https://ftp.gnu.org/gnu/hello/hello-2.12.tar.gz"
 depends=(cmatrix)
+conflicts=()
 
 build() {
     ./configure --prefix=/usr

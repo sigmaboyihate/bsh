@@ -9,7 +9,7 @@ build() {
 # feel free to add check, i don't think its important here
 
 install() {
-    make BUILD_STATIC=no PREFIX=/usr install
+    make BUILD_STATIC=no PREFIX=/usr DESTDIR=$DESTDIR install
 }
 
 remove() {

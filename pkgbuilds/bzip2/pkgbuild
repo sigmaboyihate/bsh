@@ -2,6 +2,8 @@ name="bzip2"
 version=1.0.8
 source="https://www.sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz"
 patch=("https://www.linuxfromscratch.org/patches/lfs/development/bzip2-1.0.8-install_docs-1.patch")
+confirm=true
+
 
 build() {
     patch -Np1 -i ../bzip2-1.0.8-install_docs-1.patch
@@ -13,16 +15,15 @@ build() {
 }
 
 install() {
-    make PREFIX=/usr install 
-    cp -av libbz2.so.* /usr/lib
-    ln -sfv libbz2.so.1.0.8 /usr/lib/libbz2.so
-    ln -sfv libbz2.so.1.0.8 /usr/lib/libbz2.so.1
-    
-    cp -v bzip2-shared /usr/bin/bzip2
-    for i in /usr/bin/{bzcat,bunzip2}; do
-      ln -sfv bzip2 $i
+    make PREFIX=$DESTDIR/usr install
+    cp -av libbz2.so.* $DESTDIR/usr/lib
+    ln -sfv libbz2.so.1.0.8 $DESTDIR/usr/lib/libbz2.so
+    ln -sfv libbz2.so.1.0.8 $DESTDIR/usr/lib/libbz2.so.1
+    cp -v bzip2-shared $DESTDIR/usr/bin/bzip2
+    for i in $DESTDIR/usr/bin/{bzcat,bunzip2}; do
+        ln -sfv bzip2 $i
     done
-    rm -fv /usr/lib/libbz2.a
+    rm -fv $DESTDIR/usr/lib/libbz2.a
 }
 
 remove() {

@@ -15,6 +15,6 @@ install() {
 }
 
 remove() {
-    rm -f /usr/bin/cmatrix
+    rm -f /usr/bin/cmatrix # dead code, fallback
     rm -f /usr/share/man/man1/cmatrix.1
 }

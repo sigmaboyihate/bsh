@@ -14,7 +14,7 @@ check() {
 
 install() {
     make install
-    rm -fv /usr/lib/libz.a
+    rm -fv $DESTDIR/usr/lib/libz.a
 }
 
 remove() {

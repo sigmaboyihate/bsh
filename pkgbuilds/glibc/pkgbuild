@@ -24,12 +24,10 @@ check(){
 }
 
 install() {
+    unset DESTDIR # because we use destdir :D
     sed '/test-installation/s@$(PERL)@echo not running@' -i Makefile
-    
-    # to not fuck over! 
     make DESTDIR=$PWD/dest install
     install -vm755 dest/usr/lib/*.so.* /usr/lib
-
     make install
     sed '/RTLDLIST=/s@/usr@@g' -i /usr/bin/ldd
 }

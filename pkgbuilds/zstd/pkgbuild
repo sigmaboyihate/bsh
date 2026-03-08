@@ -13,8 +13,8 @@ check(){
 } 
 
 install() {
-    make prefix=/usr install
-    rm -v /usr/lib/libzstd.a
+    make prefix=/usr DESTDIR=$DESTDIR install
+    rm -v $DESTDIR/usr/lib/libzstd.a
 }
 
 remove() {

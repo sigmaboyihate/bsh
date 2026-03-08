@@ -7,7 +7,9 @@ build() {
 }
 
 install() {
-    cp -v services protocols /etc
+    mkdir -p $DESTDIR/etc
+    cp -v services protocols $DESTDIR/etc
+    
 }
 
 remove(){

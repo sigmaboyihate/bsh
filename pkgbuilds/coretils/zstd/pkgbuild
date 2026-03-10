@@ -1,0 +1,24 @@
+name="zstd"
+version=1.5.7
+source="https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz"
+confirm=true
+
+build() {
+    make prefix=/usr
+}
+
+# feel free to add check, i don't think its important here
+check(){
+    make check
+} 
+
+package() {
+    make prefix=/usr DESTDIR=$DESTDIR install
+    rm -v $DESTDIR/usr/lib/libzstd.a
+}
+
+remove() {
+    rm -fv /usr/bin/{zstd,zstdcat,zstdgrep,zstdless,zstdmt,unzstd}
+    rm -fv /usr/lib/libzstd.so*
+    rm -fv /usr/include/zstd*.h
+}

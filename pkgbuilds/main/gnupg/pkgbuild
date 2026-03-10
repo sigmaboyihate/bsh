@@ -1,0 +1,23 @@
+name="gnupg"
+version=2.5.17
+source="https://www.gnupg.org/ftp/gcrypt/gnupg/gnupg-2.5.17.tar.bz2"
+depends=(libassuan libgcrypt libksba npth OpenLDAP pinentry)
+confirm=true
+
+build() {
+    mkdir build 
+    cd build 
+
+    ../configure --prefix=/usr        \
+                 --localstatedir=/var \
+                 --sysconfdir=/etc    \
+                 --docdir=/usr/share/doc/gnupg-2.5.17 
+    
+    make
+
+}
+
+package() {
+    make install
+}
+

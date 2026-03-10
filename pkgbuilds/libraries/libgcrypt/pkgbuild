@@ -1,0 +1,14 @@
+name="libgcrypt"
+version=1.12.1
+source="https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.12.1.tar.bz2"
+depends=(libgpg-error)
+
+build() {
+    ./configure --prefix=/usr 
+    make
+}
+
+package() {
+    make install
+}
+

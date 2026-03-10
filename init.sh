@@ -11,5 +11,6 @@ touch /var/lib/pkg/deptree
 mkdir -p /var/lib/pkg/files
 # and also the files now!
 cp -r pkgbuilds /usr/src # fixed dumbass error
-cp pkg.sh /usr/bin/pkg 
+cp pkg.sh /usr/bin/pkg
+chmod +x /usr/bin/pkg
 ln -svf /usr/bin/pkg /usr/bin/bsh

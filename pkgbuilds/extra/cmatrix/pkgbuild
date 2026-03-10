@@ -1,0 +1,20 @@
+name="cmatrix"
+version=2.0
+source="https://github.com/abishekvashok/cmatrix/releases/download/v2.0/cmatrix-v2.0-Butterscotch.tar" 
+
+strip=2
+
+build() {
+    ./configure --prefix=/usr
+    make clean 
+    make
+}
+
+package() {
+    make install
+}
+
+remove() {
+    rm -f /usr/bin/cmatrix # dead code, fallback
+    rm -f /usr/share/man/man1/cmatrix.1
+}

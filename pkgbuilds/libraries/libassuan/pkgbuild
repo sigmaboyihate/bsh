@@ -1,0 +1,14 @@
+name="libassuan"
+version=3.0.2
+source="https://www.gnupg.org/ftp/gcrypt/libassuan/libassuan-3.0.2.tar.bz2"
+depends=(libgpg-error)
+
+build() {
+    ./configure --prefix=/usr 
+    make
+}
+
+package() {
+    make install
+}
+

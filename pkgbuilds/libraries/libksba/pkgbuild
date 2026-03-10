@@ -1,0 +1,14 @@
+name="libksba"
+version=1.6.8
+source="https://www.gnupg.org/ftp/gcrypt/libksba/libksba-1.6.8.tar.bz2"
+depends=(libgpg-error) 
+
+build() {
+    ./configure --prefix=/usr  
+    make
+}
+
+package() {
+    make install
+}
+

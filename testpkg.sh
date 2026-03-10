@@ -11,20 +11,23 @@ DEPTREE=/var/lib/pkg/deptree # for dependencies (requiredby)
 
 cmd="$1"
 pkg="$2"
+pkg=$(echo "$2" | tr '[:upper:]' '[:lower:]') # fix for many
 
 # so i can organize /usr/src/pkgbuilds
 findpkg() {
-    find "$PKGBUILDS" -type d -name "$1" | head -1
+    find "$PKGBUILDS" -type d -iname "$1" | head -1
 }
 #patching, since im on lfs i need fhs patches 
 patches() {
     for p in "${patch[@]}"; do
-        file="/tmp/pkgs/$(basename "$p")"
-        if [ -f "$file" ]; then
-            echo "patch exists: $file"
-        else
+        patchfile="/tmp/pkgs/$(basename "$p")"
+        if [ ! -f "$patchfile" ]; then
             echo "downloading patch: $(basename "$p")"
-            wget -q -O "$file" "$p"
+            wget -q -O "$patchfile" "$p"
+        fi
+        if [ -d "/tmp/pkgs/$pkg" ]; then
+            echo "applying patch: $(basename "$p")"
+            patch -Np1 -i "$patchfile"
         fi
     done
 }
@@ -74,8 +77,10 @@ install)
     # safety first kids!
     [ "$(id -u)" -eq 0 ] || { echo "error: pkg must be run as root"; exit 1; }
     [ -z "$pkg" ] && echo "usage: pkg install <package>" && exit 1
-    grep -q "^$pkg " "$WORLD" && echo "$pkg is already installed" && exit 0
-    
+    if grep -iq "^$pkg " "$WORLD"; then
+        echo "package already installed: $pkg"
+        exit 0
+    fi
     LOCKDIR=/tmp/pkgs/locks
     mkdir -p "$LOCKDIR"
     if [ -f "$LOCKDIR/$pkg" ]; then
@@ -84,7 +89,8 @@ install)
     fi
     touch "$LOCKDIR/$pkg"
     trap 'rm -f "$LOCKDIR/$pkg"' EXIT # so script will remove lockdir if it fucks up mid install
-
+    
+    
     # i like having this part
     pkgpath=$(findpkg "$pkg")
     [ -z "$pkgpath" ] && echo "error: no pkgbuild found for $pkg" && exit 1
@@ -104,13 +110,16 @@ install)
 
     # deps!!!
     for dep in "${depends[@]}"; do
-        if ! grep -q "^$dep " "$WORLD"; then
+        deplow=$(echo "$dep" | tr '[:upper:]' '[:lower:]')
+        if ! grep -q "^$deplow " "$WORLD"; then
             echo "installing dependency: $dep"
-            bash "$0" install "$dep" # runs this script, also recurses! so if a dep has dep it auto does it!
+            bash "$0" install "$dep"
         fi
-	echo "$dep $pkg" >> "$DEPTREE" # record what depends on what
-    done
-    
+        # only write if entry doesnt already exist
+        if ! grep -q "^$deplow $pkg$" "$DEPTREE"; then
+            echo "$deplow $pkg" >> "$DEPTREE"
+        fi
+    done 
     # now main pkg
     wget -O /tmp/pkgs/$pkg.tar "$source"
 

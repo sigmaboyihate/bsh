@@ -1,0 +1,23 @@
+name="openldap"
+version=2.6.12
+source="https://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.6.12.tgz"
+depends=(Cyrus-SASL) 
+patch=("https://www.linuxfromscratch.org/patches/blfs/svn/openldap-2.6.12-consolidated-1.patch")
+
+build() {
+    autoconf 
+    
+    ./configure --prefix=/usr     \
+                --sysconfdir=/etc \
+                --disable-static  \
+                --enable-dynamic  \
+                --disable-debug   \
+                --disable-slapd   
+    make depend
+    make
+}
+
+package() {
+    make install
+}
+

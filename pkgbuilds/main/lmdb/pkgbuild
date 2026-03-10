@@ -1,0 +1,15 @@
+name="lmdb"
+version=0.9.35
+source="https://git.openldap.org/openldap/openldap/-/archive/LMDB_0.9.35/LMDB_0.9.35.tar.bz2"
+
+build() {
+    cd libraries/liblmdb
+    make 
+    sed -i 's| liblmdb.a||' Makefile
+
+}
+
+package() {
+    make prefix=/usr DESTDIR=$DESTDIR install
+}
+

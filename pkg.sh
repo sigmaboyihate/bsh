@@ -11,16 +11,23 @@ DEPTREE=/var/lib/pkg/deptree # for dependencies (requiredby)
 
 cmd="$1"
 pkg="$2"
+pkg=$(echo "$2" | tr '[:upper:]' '[:lower:]') # fix for many
 
+# so i can organize /usr/src/pkgbuilds
+findpkg() {
+    find "$PKGBUILDS" -type d -iname "$1" | head -1
+}
 #patching, since im on lfs i need fhs patches 
 patches() {
     for p in "${patch[@]}"; do
-        file="/tmp/pkgs/$(basename "$p")"
-        if [ -f "$file" ]; then
-            echo "patch exists: $file"
-        else
+        patchfile="/tmp/pkgs/$(basename "$p")"
+        if [ ! -f "$patchfile" ]; then
             echo "downloading patch: $(basename "$p")"
-            wget -q -O "$file" "$p"
+            wget -q -O "$patchfile" "$p"
+        fi
+        if [ -d "/tmp/pkgs/$pkg" ]; then
+            echo "applying patch: $(basename "$p")"
+            patch -Np1 -i "$patchfile"
         fi
     done
 }
@@ -50,7 +57,7 @@ confirmer() {
 # installs to destdir first, and lets me track for removal easier (used to remove via pkgbuild files, hella inefficent, fallback still exists) 
 destdirinstall() {
     mkdir -p /tmp/pkgs/$pkg-dest
-    DESTDIR=/tmp/pkgs/$pkg-dest install # destdir!!
+    DESTDIR=/tmp/pkgs/$pkg-dest package # destdir!!
 
     # record files to shove them into file tracking for removal thingy
     mkdir -p "$FILES"
@@ -70,12 +77,25 @@ install)
     # safety first kids!
     [ "$(id -u)" -eq 0 ] || { echo "error: pkg must be run as root"; exit 1; }
     [ -z "$pkg" ] && echo "usage: pkg install <package>" && exit 1
-    grep -q "^$pkg " "$WORLD" && echo "$pkg is already installed" && exit 0
-
+    if grep -iq "^$pkg " "$WORLD"; then
+        echo "package already installed: $pkg"
+        exit 0
+    fi
+    LOCKDIR=/tmp/pkgs/locks
+    mkdir -p "$LOCKDIR"
+    if [ -f "$LOCKDIR/$pkg" ]; then
+         echo "error: circular dependency detected for $pkg"
+         exit 1
+    fi
+    touch "$LOCKDIR/$pkg"
+    trap 'rm -f "$LOCKDIR/$pkg"' EXIT # so script will remove lockdir if it fucks up mid install
+    
+    
     # i like having this part
-    cat "$PKGBUILDS/$pkg/pkgbuild"
-    source "$PKGBUILDS/$pkg/pkgbuild"
-
+    pkgpath=$(findpkg "$pkg")
+    [ -z "$pkgpath" ] && echo "error: no pkgbuild found for $pkg" && exit 1
+    cat "$pkgpath/pkgbuild"
+    source "$pkgpath/pkgbuild"
     # now install! opsec
     mkdir -p /tmp/pkgs
     # patch downloader! (for deps, anything really!)
@@ -94,9 +114,9 @@ install)
             echo "installing dependency: $dep"
             bash "$0" install "$dep" # runs this script, also recurses! so if a dep has dep it auto does it!
         fi
-	echo "$dep $pkg" >> "$DEPTREE" # record what depends on what
+        echo "$(echo "$dep" | tr '[:upper:]' '[:lower:]') $pkg" >> "$DEPTREE"
     done
-
+    
     # now main pkg
     wget -O /tmp/pkgs/$pkg.tar "$source"
 
@@ -137,7 +157,7 @@ install)
     # done!!! wipe files :D
     rm -rf /tmp/pkgs/$pkg
     rm -f /tmp/pkgs/$pkg.tar
-    rm -f /tmp/pkgs/*.patch 
+    rm -f "$LOCKDIR/$pkg"
     ;;
 
 remove)
@@ -146,14 +166,20 @@ remove)
     [ -z "$pkg" ] && echo "usage: pkg remove <package>" && exit 1
     grep -q "^$pkg " "$WORLD" || { echo "$pkg is not installed"; exit 1; }
 
-    source "$PKGBUILDS/$pkg/pkgbuild"
+    force=false
+    [ "$3" = "--force" ] && force=true
 
-    requiredby=$(grep "^$pkg " "$DEPTREE" | awk '{print $2}' | tr '\n' ' ')
-    if [ -n "$requiredby" ]; then
-        echo "error: $pkg is required by: $requiredby"
-        exit 1
+    pkgpath=$(findpkg "$pkg")
+    [ -z "$pkgpath" ] && echo "error: no pkgbuild found for $pkg" && exit 1
+    source "$pkgpath/pkgbuild"
+
+    if [ "$force" = "false" ]; then
+        requiredby=$(grep "^$pkg " "$DEPTREE" | awk '{print $2}' | tr '\n' ' ')
+        if [ -n "$requiredby" ]; then
+            echo "error: $pkg is required by: $requiredby"
+            exit 1
+        fi
     fi
-
     # remove all tracked files
     while IFS= read -r file; do
         rm -f "$file"
@@ -174,10 +200,11 @@ build)
     [ -z "$pkg" ] && echo "usage: pkg build <package>" && exit 1
 
     # i like having this part, makes me feel POWERFUL!!
-    cat "$PKGBUILDS/$pkg/pkgbuild"
-
+    pkgpath=$(findpkg "$pkg")
+    [ -z "$pkgpath" ] && echo "error: no pkgbuild found for $pkg" && exit 1
+    cat "$pkgpath/pkgbuild"
+    source "$pkgpath/pkgbuild"
     # gets defs
-    source "$PKGBUILDS/$pkg/pkgbuild"
 
     mkdir -p /tmp/pkgs
     # build does NOT do deps. simple.

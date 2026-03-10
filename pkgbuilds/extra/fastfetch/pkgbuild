@@ -1,0 +1,17 @@
+name="fastfetch"
+version=2.60.0
+source="https://github.com/fastfetch-cli/fastfetch/releases/download/2.60.0/fastfetch-linux-amd64.tar.gz"
+conflicts=()
+
+strip=0
+
+build() {
+    echo "fastfetch!"
+}
+
+package() {
+    mkdir -p $DESTDIR/usr/bin
+    cp fastfetch-linux-amd64/usr/bin/fastfetch $DESTDIR/usr/bin/fastfetch
+    echo "done!!!"
+}
+

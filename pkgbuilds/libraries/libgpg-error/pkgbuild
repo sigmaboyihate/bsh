@@ -1,0 +1,13 @@
+name="libgpg-error"
+version=1.59
+source="https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.59.tar.bz2"
+
+build() {
+    ./configure --prefix=/usr --sysconfdir=/etc 
+    make
+}
+
+package() { # now package instead of install, why? simple, install was calling itself.
+    make DESTDIR="$DESTDIR" install
+    install -Dm644 README "$DESTDIR/usr/share/doc/libgpg-error-1.59/README"
+}

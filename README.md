@@ -14,3 +14,8 @@ please edit /etc/pkg/pkg.conf (placeholder name) and add MAKEFLAGS CXXFLAGS, wha
 
 i am aware this is slightly unoriginal, however im bored.
 ill probably redo stuff in c++ when i complete this, and make it better (in the sense of cleaner code, less random shit, and more original) 
+
+## recent adds:
+fixed the funny fucking error causing the 'install' command to literally call install, making builds last fucking forever!
+added a custom patch system that doesn't require a specific patcher, just does it
+thats basically it, but i also made it oragnizable in directories and a bit more that im lazy to list 

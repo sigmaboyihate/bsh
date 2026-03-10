@@ -1,0 +1,12 @@
+name="bc"
+version=7.0.3
+source="https://github.com/gavinhoward/bc/releases/download/7.0.3/bc-7.0.3.tar.xz"
+
+build() {
+    CC='gcc -std=c99' ./configure --prefix=/usr -G -O3 -r
+    make 
+}
+
+package() {
+    make DESTDIR="$DESTDIR" install
+}

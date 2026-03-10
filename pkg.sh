@@ -233,8 +233,6 @@ list)
     # holy simple 
     echo "installed packages:"
     cat "$WORLD"
-    echo "and deptree:"
-    cat "$DEPTREE"
     ;;
 
 requiredby)

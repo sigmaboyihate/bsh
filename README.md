@@ -11,6 +11,7 @@ please edit /etc/pkg/pkg.conf (placeholder name) and add MAKEFLAGS CXXFLAGS, wha
 - testing suite (tests for safety, but build already builds)
 - better cli, more error handling
 - integ checks
+- this is actually just a funny project, very unlikely to become something usuable (for the average joe) 
 
 i am aware this is slightly unoriginal, however im bored.
 ill probably redo stuff in c++ when i complete this, and make it better (in the sense of cleaner code, less random shit, and more original) 

@@ -1,0 +1,15 @@
+name="iptables"
+version=1.8.12
+source="https://www.netfilter.org/projects/iptables/files/iptables-1.8.12.tar.xz"
+
+build(){
+    ./configure --prefix=/usr      \
+                --disable-nftables \
+                --enable-libipq    
+    make
+}
+
+package(){
+    make DESTDIR="$DESTDIR" install
+}
+

@@ -1,0 +1,13 @@
+name="libcap"
+version=1.10.6
+source="https://www.tcpdump.org/release/libpcap-1.10.6.tar.gz"
+
+build(){
+    ./configure --prefix=/usr 
+    make
+}
+
+package(){
+    sed -i '/INSTALL_DATA.*libpcap.a\|RANLIB.*libpcap.a/ s/^/#/' Makefile
+    make DESTDIR="$DESTDIR" install
+}

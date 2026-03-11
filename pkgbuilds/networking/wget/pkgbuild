@@ -1,0 +1,15 @@
+name="wget"
+version=1.25.0
+source="https://ftp.gnu.org/gnu/wget/wget-1.25.0.tar.gz"
+# don't forget to add depends for the yk yeah 
+
+build() {
+    ./configure --prefix=/usr      \
+                --sysconfdir=/etc  \
+                --with-ssl=openssl
+    make
+}
+
+package(){
+    make DESTDIR="$DESTDIR" install # yayy
+}

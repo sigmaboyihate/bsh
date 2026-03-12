@@ -1,0 +1,17 @@
+name="make-ca"
+version=1.16.1
+source="https://github.com/lfs-book/make-ca/archive/v1.16.1/make-ca-1.16.1.tar.gz"
+depends=(p11-kit) # for runtime
+
+build(){
+    sed '/mktemp/s/-t //' -i make-ca
+}
+
+package() {
+    make DESTDIR="$DESTDIR" install
+    install -vdm755 $DESTDIR/etc/ssl/local
+}
+
+postpackage(){
+    /usr/sbin/make-ca -g
+}

@@ -1,7 +1,7 @@
 name="linux-firmware"
 version=20260309
 source="https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20260309.tar.xz"
-confirm=true
+sha256sum="c74cc6f562b58ad5bc6b2b00a61abc29c9e49e06126e7ba34fbca9928e07a96c"
 
 build() {
     : # firmware!! yay!!

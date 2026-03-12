@@ -33,6 +33,26 @@ patches() {
     done
 }
 
+verify() {
+    if [ -n "$sha256sum" ]; then
+        echo "verifying $pkg"
+        echo "$sha256sum  /tmp/pkgs/$pkg.tar" | sha256sum -c || {
+            echo "error: checksum failed for $pkg, aborting!!!"
+            rm -f /tmp/pkgs/$pkg.tar
+            exit 1
+        }
+    fi
+    if [ -n "$md5sum" ]; then
+        echo "verifying $pkg"
+        echo "$md5sum  /tmp/pkgs/$pkg.tar" | md5sum -c || {
+            echo "error: checksum failed for $pkg, aborting!!!"
+            rm -f /tmp/pkgs/$pkg.tar
+            exit 1
+        }
+    fi
+    [ -z "$sha256sum" ] && [ -z "$md5sum" ] && echo "warn: no checksum for $pkg, living dangerously!! (chance fur malware! or bad shit, idk!)"
+}
+
 # purely there just for you to glance around and see if glibc did all tests right (other pkgs too)
 confirmer() { 
     local pkg="$1"
@@ -123,8 +143,9 @@ install)
         echo "$(echo "$dep" | tr '[:upper:]' '[:lower:]') $pkg" >> "$DEPTREE"
     done
     
-    # now main pkg
+    # now pkg
     wget -O /tmp/pkgs/$pkg.tar "$source"
+    verify
 
     mkdir -p /tmp/pkgs/$pkg # makes the pkg dir
     # --strip-comp reduces risk of compile fucking itself :D
@@ -221,6 +242,7 @@ build)
 
     # now main pkg
     wget -O /tmp/pkgs/$pkg.tar "$source"
+    verify
 
     mkdir -p /tmp/pkgs/$pkg # makes the pkg dir
 
@@ -256,6 +278,7 @@ rebuild) # install, but doesn't care about package being in world file
 
     mkdir -p /tmp/pkgs
     wget -O /tmp/pkgs/$pkg.tar "$source"
+    verify
     mkdir -p /tmp/pkgs/$pkg
     tar -xf /tmp/pkgs/$pkg.tar -C /tmp/pkgs/$pkg --strip-components=${strip:-1}
     cd /tmp/pkgs/$pkg

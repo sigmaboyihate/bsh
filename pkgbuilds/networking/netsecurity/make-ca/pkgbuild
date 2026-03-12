@@ -13,5 +13,6 @@ package() {
 }
 
 postpackage(){
-    /usr/sbin/make-ca -g
+    /usr/sbin/make-ca -g --force
+    ln -sf /etc/pki/tls/certs/ca-bundle.crt /etc/ssl/certs/cacert.pem
 }

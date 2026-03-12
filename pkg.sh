@@ -17,7 +17,8 @@ pkg=$(echo "$2" | tr '[:upper:]' '[:lower:]') # fix for many
 findpkg() {
     find "$PKGBUILDS" -type d -iname "$1" | head -1
 }
-#patching, since im on lfs i need fhs patches 
+
+#patchings!! (for fhs, etc, and just testing!)
 patches() {
     for p in "${patch[@]}"; do
         patchfile="/tmp/pkgs/$(basename "$p")"
@@ -55,19 +56,24 @@ confirmer() {
 }
 
 # installs to destdir first, and lets me track for removal easier (used to remove via pkgbuild files, hella inefficent, fallback still exists) 
+# revamped destdirinstall
 destdirinstall() {
     mkdir -p /tmp/pkgs/$pkg-dest
-    DESTDIR=/tmp/pkgs/$pkg-dest package # destdir!!
+    DESTDIR=/tmp/pkgs/$pkg-dest
+    package
 
-    # record files to shove them into file tracking for removal thingy
+    # record files for removal tracking
     mkdir -p "$FILES"
     find /tmp/pkgs/$pkg-dest -type f -o -type l | \
         sed "s|/tmp/pkgs/$pkg-dest||" > "$FILES/$pkg"
 
-    # copy to real system
-    cp -r /tmp/pkgs/$pkg-dest/* /
+    # copy to real system, atomic so no text file busy bs
+    find /tmp/pkgs/$pkg-dest -type f -o -type l | while IFS= read -r f; do
+        dest="${f#/tmp/pkgs/$pkg-dest}"
+        mkdir -p "$(dirname "$dest")"
+        cp -a "$f" "$dest.pkgnew" && mv "$dest.pkgnew" "$dest"
+    done
 
-    # cleanup stage
     rm -rf /tmp/pkgs/$pkg-dest
 }
 
@@ -154,6 +160,10 @@ install)
         echo "installation skipped for $name" # not adding to world
     fi
 
+    if declare -f postpackage > /dev/null; then
+        postpackage
+    fi # testing postpackage shit, probably just gonna configure basics for packages
+
     # done!!! wipe files :D
     rm -rf /tmp/pkgs/$pkg
     rm -f /tmp/pkgs/$pkg.tar
@@ -234,6 +244,37 @@ list)
     echo "installed packages:"
     cat "$WORLD"
     ;;
+ 
+rebuild) # install, but doesn't care about package being in world file
+    [ "$(id -u)" -eq 0 ] || { echo "error: pkg must be run as root"; exit 1; }
+    [ -z "$pkg" ] && echo "usage: pkg rebuild <package>" && exit 1
+
+    pkgpath=$(findpkg "$pkg")
+    [ -z "$pkgpath" ] && echo "error: no pkgbuild found for $pkg" && exit 1
+    cat "$pkgpath/pkgbuild"
+    source "$pkgpath/pkgbuild"
+
+    mkdir -p /tmp/pkgs
+    wget -O /tmp/pkgs/$pkg.tar "$source"
+    mkdir -p /tmp/pkgs/$pkg
+    tar -xf /tmp/pkgs/$pkg.tar -C /tmp/pkgs/$pkg --strip-components=${strip:-1}
+    cd /tmp/pkgs/$pkg
+    build
+
+    if declare -f check > /dev/null; then check; fi
+
+    destdirinstall
+
+    # update world if already there, add if not
+    sed -i "/^$pkg /d" "$WORLD"
+    echo "$name $version" >> "$WORLD"
+    echo "rebuilt $name $version"
+
+    if declare -f postpackage > /dev/null; then postpackage; fi
+
+    rm -rf /tmp/pkgs/$pkg
+    rm -f /tmp/pkgs/$pkg.tar
+    ;;
 
 requiredby)
     # also for debugging, lets me see what package is requiredby what, good for debugging problems
@@ -257,8 +298,39 @@ owns)
     [ -z "$result" ] && echo "no package owns $file" && exit 1
     echo "owned by: $(basename $result)"
     ;;
+
+
+update)
+    [ "$(id -u)" -eq 0 ] || { echo "error: pkg must be run as root"; exit 1; }
+    echo "checking for updates"
+    updates=()
+    # god finally! an update system!
+    while IFS= read -r line; do
+        p=$(echo "$line" | awk '{print $1}')
+        iv=$(echo "$line" | awk '{print $2}')
+        pp=$(findpkg "$p")
+        [ -z "$pp" ] && echo "warn: no pkgbuild for $p" && continue
+        pv=$(grep '^version=' "$pp/pkgbuild" | head -1 | cut -d= -f2 | tr -d '"'"'")
+        [ "$iv" != "$pv" ] && echo "  $p: $iv -> $pv" && updates+=("$p") # very complex grep system
+    done < "$WORLD"
+
+    [ ${#updates[@]} -eq 0 ] && echo "everything up to date!!!" && exit 0
+
+    echo -n "upgrade ${#updates[@]} package(s)? [y/N]: "
+    read -r reply
+    case "$reply" in
+        y|Y|yes|YES) ;;
+        *) echo "cancelled."; exit 0 ;;
+    esac
+
+    for pkg in "${updates[@]}"; do
+        echo "upgrading $pkg"
+        sed -i "/^$pkg /d" "$WORLD"
+        bash "$0" install "$pkg" || echo "failed: $pkg"
+    done
+    ;;
 *)
-    echo "usage: pkg {install|remove|build|list|config|requiredby|owns} <package>"
+    echo "usage: pkg {install|remove|build|list|config|requiredby|owns|update|rebuild} <package>"
     ;;
 
 esac

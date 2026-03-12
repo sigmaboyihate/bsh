@@ -17,8 +17,7 @@ pkg=$(echo "$2" | tr '[:upper:]' '[:lower:]') # fix for many
 findpkg() {
     find "$PKGBUILDS" -type d -iname "$1" | head -1
 }
-
-#patchings!! (for fhs, etc, and just testing!)
+#patching, since im on lfs i need fhs patches 
 patches() {
     for p in "${patch[@]}"; do
         patchfile="/tmp/pkgs/$(basename "$p")"
@@ -65,8 +64,8 @@ destdirinstall() {
     find /tmp/pkgs/$pkg-dest -type f -o -type l | \
         sed "s|/tmp/pkgs/$pkg-dest||" > "$FILES/$pkg"
 
-    # copy to real system, safer now!
-    cp -a /tmp/pkgs/$pkg-dest/. /
+    # copy to real system
+    cp -r /tmp/pkgs/$pkg-dest/* /
 
     # cleanup stage
     rm -rf /tmp/pkgs/$pkg-dest
@@ -154,10 +153,6 @@ install)
     else
         echo "installation skipped for $name" # not adding to world
     fi
-
-    if declare -f postpackage > /dev/null; then
-        postpackage
-    fi # testing postpackage shit, probably just gonna configure basics for packages
 
     # done!!! wipe files :D
     rm -rf /tmp/pkgs/$pkg

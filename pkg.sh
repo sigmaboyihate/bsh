@@ -134,7 +134,7 @@ install)
     done
     patches
 
-    # deps!!!
+    # deps!!! recyrses through them
     for dep in "${depends[@]}"; do
         if ! grep -q "^$dep " "$WORLD"; then
             echo "installing dependency: $dep"

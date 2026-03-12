@@ -1,0 +1,20 @@
+name="xz"
+version=5.8.2
+source="https://github.com/tukaani-project/xz/releases/download/v5.8.2/xz-5.8.2.tar.xz"
+confirm=true
+
+build() {
+    ./configure --prefix=/usr    \
+                --disable-static \
+                --docdir=/usr/share/doc/xz-5.8.2
+    make
+}
+
+check(){
+    make check
+}
+
+package() {
+    make install
+}
+

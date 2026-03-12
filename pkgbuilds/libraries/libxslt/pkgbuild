@@ -1,0 +1,17 @@
+name="libxslt"
+version=1.1.45
+source="https://download.gnome.org/sources/libxslt/1.1/libxslt-$version.tar.xz"
+depends=(libxml2)
+md5sum="84bb3f6ba7f5ee98af5dcd72e828c73e"
+
+build(){
+    ./configure --prefix=/usr    \
+                --disable-static \
+                --without-python \
+                --docdir=/usr/share/doc/libxslt-$version 
+    make
+}
+
+package(){
+    make DESTDIR="$DESTDIR" install
+}

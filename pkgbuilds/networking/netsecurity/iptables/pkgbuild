@@ -1,6 +1,7 @@
 name="iptables"
 version=1.8.12
 source="https://www.netfilter.org/projects/iptables/files/iptables-1.8.12.tar.xz"
+md5sum="960aa8a07e45b232111cf476ad3038ec"
 
 build(){
     ./configure --prefix=/usr      \

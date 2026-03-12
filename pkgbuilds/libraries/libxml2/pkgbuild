@@ -1,0 +1,23 @@
+name="libxml2"
+version=2.15.2
+source="https://download.gnome.org/sources/libxml2/2.15/libxml2-$version.tar.xz"
+depends=(icu)
+md5sum="1ade9c67fddf485c37af352c8f471268"
+
+build(){
+    sed -i "/'git'/,+3d" meson.build
+    mkdir build
+    cd build
+
+    meson setup ..            \
+          --prefix=/usr       \
+          --buildtype=release \
+          -D history=enabled  \
+          -D icu=enabled      
+    ninja
+}
+
+package(){
+    DESTDIR="$DESTDIR" ninja install
+    sed "s/--static/--shared/" -i $DESTDIR/usr/bin/xml2-config
+}

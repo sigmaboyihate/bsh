@@ -1,0 +1,11 @@
+name="hwdata"
+version=0.405
+source="https://github.com/vcrhonek/hwdata/archive/v0.405/hwdata-0.405.tar.gz"
+
+build(){
+    ./configure --prefix=/usr --disable-blacklist
+}
+
+package(){
+    make DESTDIR="$DESTDIR" install
+}

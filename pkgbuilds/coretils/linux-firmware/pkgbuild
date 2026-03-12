@@ -1,0 +1,13 @@
+name="linux-firmware"
+version=20260309
+source="https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20260309.tar.xz"
+confirm=true
+
+build() {
+    : # firmware!! yay!!
+}
+
+package() {
+    install -d $DESTDIR/lib/firmware
+    ./copy-firmware.sh $DESTDIR/lib/firmware
+}

@@ -1,0 +1,11 @@
+name="btop"
+version=1.4.6
+source="https://github.com/aristocratos/btop/archive/v1.4.6/btop-1.4.6.tar.gz"
+
+build(){
+    make
+}
+
+package(){
+    make PREFIX=/usr DESTDIR="$DESTDIR" install
+}

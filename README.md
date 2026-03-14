@@ -1,3 +1,12 @@
+# bsh
+small package manager in posix.
+
+## philosophy
+aim for minimal dependencies and conflicts in system, you can edit pkgbuilds to your liking and make your own git repo with your fork of them, making environements reproducible,
+simple and stupid, fixing stuff is manual.
+
+
+# to get started:
 just use init script.
 dependencies for package manager:
 wget. thats it. preferably make-ca, but you can just edit the package manager to pass --no-check-certificate.
